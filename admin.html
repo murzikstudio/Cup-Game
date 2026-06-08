@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>杯子 — Админ-панель</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0f0f; --bg2:#1a1a1a; --card:#222; --border:#333;
+  --green:#2ecc71; --green2:#27ae60; --red:#e74c3c;
+  --gold:#f1c40f; --diamond:#5dade2; --text:#e8e8e8; --text2:#aaa;
+  --purple:#9b59b6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;padding:24px 16px;max-width:600px;margin:0 auto}
+h1{font-size:22px;font-weight:900;margin-bottom:4px;color:var(--green)}
+.sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.card{background:var(--card);border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:16px}
+.card-title{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+label{font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;margin-top:10px}
+input,select{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);
+  padding:10px 12px;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700}
+select option{background:var(--bg2)}
+.btn{width:100%;padding:12px;border-radius:10px;border:none;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:14px;cursor:pointer;margin-top:14px;transition:all .2s}
+.btn-green{background:linear-gradient(135deg,var(--green2),var(--green));color:#fff}
+.btn-red{background:linear-gradient(135deg,#c0392b,var(--red));color:#fff}
+.btn-google{background:#fff;color:#333;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.code-result{background:var(--bg);border:2px solid var(--green);border-radius:12px;padding:14px;
+  margin-top:12px;text-align:center;display:none}
+.code-value{font-size:22px;font-weight:900;color:var(--green);letter-spacing:2px;
+  font-family:monospace;margin-bottom:6px}
+.code-meta{font-size:12px;color:var(--text2)}
+.copy-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 16px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;cursor:pointer;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--text2);font-weight:800;padding:6px 8px;border-bottom:1px solid var(--border)}
+td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800}
+.badge-green{background:rgba(46,204,113,.2);color:var(--green)}
+.badge-red{background:rgba(231,76,60,.2);color:var(--red)}
+.badge-gold{background:rgba(241,196,15,.2);color:var(--gold)}
+.auth-wrap{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--card);
+  border:1px solid var(--border);border-left:3px solid var(--green);padding:10px 18px;
+  border-radius:12px;font-weight:700;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.type-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.type-option{background:var(--bg2);border:2px solid var(--border);border-radius:10px;
+  padding:10px;text-align:center;cursor:pointer;transition:all .15s}
+.type-option.selected{border-color:var(--green);background:rgba(46,204,113,.1)}
+.type-option .icon{font-size:22px;display:block;margin-bottom:4px}
+.type-option .label{font-size:12px;font-weight:800}
+#adminOnly{display:none}
+</style>
+</head>
+<body>
+
+<div id="loginSection" class="auth-wrap">
+  <div style="font-size:48px">⚙️</div>
+  <h1>Админ-панель 杯子</h1>
+  <p class="sub">Войди через тот же Google-аккаунт, что и в игре.<br>Доступ только для администраторов.</p>
+  <button class="btn btn-google" id="googleLoginBtn" style="width:280px">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.2 30.2 0 24 0 14.7 0 6.7 5.5 2.8 13.5l7.8 6.1C12.4 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.7-2.1 5-4.4 6.5l6.9 5.4c4-3.7 6.3-9.2 6.3-15.9z"/><path fill="#FBBC05" d="M10.6 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.7-4.6l-7.8-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.8 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-6.9-5.4c-2 1.4-4.6 2.2-8.3 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6.1C6.7 42.5 14.7 48 24 48z"/></svg>
+    Войти через Google
+  </button>
+  <p style="font-size:12px;color:var(--text2)">После первого входа добавь свой user_id в таблицу admin_users в Supabase</p>
+</div>
+
+<div id="adminOnly">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div>
+      <h1>⚙️ Админ-панель</h1>
+      <div class="sub" id="adminEmail">Загрузка...</div>
+    </div>
+    <button class="btn btn-red" id="logoutBtn" style="width:auto;padding:8px 16px;margin-top:0;font-size:12px">Выйти</button>
+  </div>
+
+  <!-- GENERATE CODE -->
+  <div class="card">
+    <div class="card-title">🎟️ Создать промокод</div>
+
+    <label>Тип кода</label>
+    <div class="type-row">
+      <div class="type-option selected" data-type="diamonds" onclick="selectType('diamonds',this)">
+        <span class="icon">💎</span><span class="label">Алмазы</span>
+      </div>
+      <div class="type-option" data-type="box" onclick="selectType('box',this)">
+        <span class="icon">📦</span><span class="label">Ящики</span>
+      </div>
+      <div class="type-option" data-type="premium_pack" onclick="selectType('premium_pack',this)">
+        <span class="icon">🥚</span><span class="label">Премиум-пак</span>
+      </div>
+      <div class="type-option" data-type="china_box" onclick="selectType('china_box',this)">
+        <span class="icon">🥡</span><span class="label">Китайский ящик</span>
+      </div>
+    </div>
+
+    <div id="diamondsFields">
+      <label>Количество алмазов 💎</label>
+      <input type="number" id="diamondsAmount" placeholder="например 500" min="1">
+    </div>
+
+    <div id="boxFields" style="display:none">
+      <label>Тип ящика</label>
+      <select id="boxType">
+        <option value="small">📦 Маленький</option>
+        <option value="big">🧰 Большой</option>
+        <option value="legendary">🏆 Легендарный</option>
+        <option value="ultra">🪎 Ультра</option>
+        <option value="ice">🧊 Ледяной</option>
+      </select>
+      <label>Количество ящиков</label>
+      <input type="number" id="boxCount" placeholder="например 3" min="1" value="1">
+    </div>
+
+    <div id="chinaBoxFields" style="display:none">
+      <label>Количество китайских ящиков 🥡</label>
+      <input type="number" id="chinaBoxCount" placeholder="например 5" min="1" value="1">
+    </div>
+
+    <div id="premiumFields" style="display:none">
+      <div style="background:rgba(255,78,216,.1);border:1px solid rgba(255,78,216,.3);border-radius:10px;padding:12px;margin-top:10px;font-size:12px;color:#ff4fd8;font-weight:700">
+        🥚 Этот код даст игроку питомца ЯИЧКО XD (5 фрагментов)
+      </div>
+    </div>
+
+    <label>Заметка (необязательно)</label>
+    <input type="text" id="codeNote" placeholder="Для кого этот код...">
+
+    <button class="btn btn-green" id="generateBtn">🎟️ Сгенерировать код</button>
+
+    <div class="code-result" id="codeResult">
+      <div class="code-value" id="generatedCode">CUP-XXXX-XXXX</div>
+      <div class="code-meta" id="codeMeta"></div>
+      <button class="copy-btn" onclick="copyCode()">📋 Скопировать</button>
+    </div>
+  </div>
+
+  <!-- CODES LIST -->
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📋 Все коды</span>
+      <button class="copy-btn" onclick="loadCodes()" style="background:var(--card);border:1px solid var(--border);color:var(--text2)">Обновить</button>
+    </div>
+    <div id="codesTable"><div style="color:var(--text2);font-size:13px">Загрузка...</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── CONFIG (те же данные что в auth.js) ──
+const SUPABASE_URL      = 'https://btocrtujvjpobmwvsuys.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0b2NydHVqdmpwb2Jtd3ZzdXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4Mjg4ODgsImV4cCI6MjA5NjQwNDg4OH0.V-nd7qke4e83pjqVWRJy10goZ-WRoYw88Jrr8DwShLA';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let selectedType = 'diamonds';
+
+// ── AUTH ──
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    currentUser = session.user;
+    await checkAdminAccess(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    document.getElementById('loginSection').style.display = 'flex';
+    document.getElementById('adminOnly').style.display = 'none';
+  }
+});
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) { currentUser = session.user; await checkAdminAccess(session.user); }
+})();
+
+async function checkAdminAccess(user) {
+  const { data } = await sb.from('admin_users').select('user_id').eq('user_id', user.id).maybeSingle();
+  if (data) {
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('adminOnly').style.display = 'block';
+    document.getElementById('adminEmail').textContent = user.email + ' · ' + user.id;
+    loadCodes();
+  } else {
+    document.getElementById('loginSection').style.display = 'flex';
+    document.getElementById('loginSection').querySelector('p').style.color = '#e74c3c';
+    document.getElementById('loginSection').querySelector('p').textContent =
+      '❌ Нет доступа. Добавь свой user_id (' + user.id + ') в таблицу admin_users в Supabase';
+  }
+}
+
+document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+});
+document.getElementById('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+// ── TYPE SELECT ──
+function selectType(type, el) {
+  selectedType = type;
+  document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('diamondsFields').style.display  = type === 'diamonds'    ? '' : 'none';
+  document.getElementById('boxFields').style.display        = type === 'box'          ? '' : 'none';
+  document.getElementById('chinaBoxFields').style.display   = type === 'china_box'   ? '' : 'none';
+  document.getElementById('premiumFields').style.display    = type === 'premium_pack' ? '' : 'none';
+  document.getElementById('codeResult').style.display = 'none';
+}
+
+// ── GENERATE ──
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const seg = n => Array.from({length:n},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  return `CUP-${seg(4)}-${seg(4)}`;
+}
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const code = genCode();
+  const note = document.getElementById('codeNote').value.trim();
+  let row = { code, type: selectedType, created_by: currentUser.id, note: note || null };
+
+  if (selectedType === 'diamonds') {
+    const amt = parseInt(document.getElementById('diamondsAmount').value);
+    if (!amt || amt < 1) { toast('Введи количество алмазов'); return; }
+    row.diamonds_amount = amt;
+  } else if (selectedType === 'box') {
+    const btype = document.getElementById('boxType').value;
+    const cnt   = parseInt(document.getElementById('boxCount').value) || 1;
+    row.box_type = btype; row.box_count = cnt;
+  } else if (selectedType === 'china_box') {
+    const cnt = parseInt(document.getElementById('chinaBoxCount').value) || 1;
+    row.box_count = cnt;
+  }
+  // premium_pack — ничего дополнительного
+
+  const { error } = await sb.from('promo_codes').insert(row);
+  if (error) { toast('Ошибка: ' + error.message, true); return; }
+
+  const meta = selectedType === 'diamonds'    ? `${row.diamonds_amount} 💎`
+             : selectedType === 'box'          ? `${row.box_count}× ${row.box_type}`
+             : selectedType === 'china_box'    ? `${row.box_count}× 🥡 China Box`
+             : '🥚 Премиум-пак';
+
+  document.getElementById('generatedCode').textContent = code;
+  document.getElementById('codeMeta').textContent = meta + (note ? ' · ' + note : '');
+  document.getElementById('codeResult').style.display = 'block';
+  toast('Код создан! ✅');
+  loadCodes();
+});
+
+function copyCode() {
+  const code = document.getElementById('generatedCode').textContent;
+  navigator.clipboard.writeText(code).then(() => toast('Скопировано!'));
+}
+
+// ── LOAD CODES ──
+async function loadCodes() {
+  const { data, error } = await sb.from('promo_codes').select('*').order('created_at', { ascending: false }).limit(50);
+  const el = document.getElementById('codesTable');
+  if (error || !data?.length) { el.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:8px 0">Нет кодов</div>'; return; }
+
+  const ICONS = { diamonds:'💎', box:'📦', premium_pack:'🥚', china_box:'🥡' };
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Код</th><th>Тип</th><th>Значение</th><th>Статус</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(r => {
+          const val = r.type==='diamonds' ? r.diamonds_amount+'💎'
+                    : r.type==='box' ? r.box_count+'× '+r.box_type
+                    : r.type==='china_box' ? r.box_count+'× 🥡'
+                    : 'Premium';
+          const badge = r.used
+            ? `<span class="badge badge-red">Использован</span>`
+            : `<span class="badge badge-green">Активен</span>`;
+          return `<tr>
+            <td><code style="font-size:11px;letter-spacing:1px">${r.code}</code>
+              ${r.note ? `<div style="color:var(--text2);font-size:10px">${r.note}</div>` : ''}
+            </td>
+            <td>${ICONS[r.type]||'?'} ${r.type}</td>
+            <td>${val}</td>
+            <td>${badge}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── TOAST ──
+function toast(msg, isError=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderLeftColor = isError ? 'var(--red)' : 'var(--green)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>杯子</title>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div class="auth-overlay" id="authOverlay" style="display:flex">
+  <div class="auth-card">
+    <span class="auth-logo">杯子</span>
+    <div class="auth-title">Добро пожаловать!</div>
+    <div class="auth-sub">Войди через Google, чтобы твой прогресс сохранялся в облаке на всех устройствах.</div>
+    <button class="google-btn" id="googleSignInBtn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.2 30.2 0 24 0 14.7 0 6.7 5.5 2.8 13.5l7.8 6.1C12.4 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.7-2.1 5-4.4 6.5l6.9 5.4c4-3.7 6.3-9.2 6.3-15.9z"/><path fill="#FBBC05" d="M10.6 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.7-4.6l-7.8-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.8 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-6.9-5.4c-2 1.4-4.6 2.2-8.3 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6.1C6.7 42.5 14.7 48 24 48z"/></svg>
+      Войти через Google
+    </button>
+    <button class="auth-offline-btn" id="offlineModeBtn">Играть без входа (без облака)</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="header">
+  <div class="logo">杯子</div>
+  <div class="currencies">
+    <div class="currency">💵 <span id="dollarCount">0</span></div>
+    <div class="currency">💎 <span id="diamondCount">5</span></div>
+  </div>
+  <div class="auth-user-chip" id="authChip" style="display:none;margin-left:8px"></div>
+</div>
+
+<!-- PAGES -->
+<div class="page-wrapper">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="home-page">
+      <div class="streak-display">
+        <span class="streak-label">Серия:</span>
+        <span class="streak-count" id="streakNum">0</span>
+        <span class="streak-fire" id="streakFire" style="display:none">🔥</span>
+      </div>
+      <div class="cup-arena">
+        <div class="cup-container" id="cupContainer">
+          <svg class="cup-svg" id="cupSvg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cupGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#3a8f5a"/>
+                <stop offset="100%" stop-color="#1e5c38"/>
+              </linearGradient>
+              <linearGradient id="cupShine" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+            </defs>
+            <path d="M18 20 L102 20 L90 130 L30 130 Z" fill="url(#cupGrad)" rx="8"/>
+            <path d="M18 20 L102 20 L96 50 L24 50 Z" fill="url(#cupShine)"/>
+            <rect x="10" y="12" width="100" height="14" rx="7" fill="#2ecc71"/>
+            <rect x="10" y="12" width="100" height="7" rx="7" fill="rgba(255,255,255,0.2)"/>
+            <path d="M28 35 L35 115" stroke="rgba(255,255,255,0.15)" stroke-width="4" stroke-linecap="round"/>
+            <rect x="30" y="126" width="60" height="10" rx="5" fill="#1a5c33"/>
+          </svg>
+          <div class="coin-reveal" id="coinReveal">🪙</div>
+        </div>
+      </div>
+      <div class="result-text" id="resultText">Нажми на стакан!</div>
+      <div class="cooldown-bar-wrap" id="cooldownWrap">
+        <div class="cooldown-bar" id="cooldownBar" style="width:100%"></div>
+      </div>
+      <div class="cooldown-text" id="cooldownText"></div>
+      <div class="tap-hint" id="tapHint">👆 Переверни стакан</div>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div class="page" id="page-shop">
+    <div class="shop-section">
+      <div class="section-title">⭐ Предложения</div>
+      <div id="offersContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div id="goldPassContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">⬆️ Улучшения</div>
+      <div id="upgradesContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">📦 Ящики</div>
+      <div class="box-grid" id="boxesShopContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">🧪 Зелья</div>
+      <div id="potionsShopContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">🎒 Предметы</div>
+      <div id="itemsShopContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">🔨 Крафт зелий</div>
+      <div id="craftShopContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">🎁 Ежедневный подарок</div>
+      <div class="daily-card">
+        <div class="daily-title">🎁 Подарок дня</div>
+        <div class="daily-subtitle">Открывай каждый день!</div>
+        <button class="daily-btn" id="dailyBtn">Получить!</button>
+        <div class="daily-cooldown" id="dailyCooldown"></div>
+      </div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">💎 Купить доллары</div>
+      <div class="money-pack-grid" id="moneyPackContainer"></div>
+    </div>
+    <div class="shop-section">
+      <div class="section-title">🔐 Промокоды</div>
+      <div class="promo-card">
+        <div class="offer-desc">Введи одноразовый промокод ниже.</div>
+        <div class="promo-row">
+          <input class="promo-input" id="promoInput" placeholder="PROMO CODE" />
+          <button class="promo-btn" id="promoBtn">Активировать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="page" id="page-inv">
+    <div class="pets-section-title">📦 Твои ящики</div>
+    <div class="inv-boxes" id="invBoxes"></div>
+    <div class="pets-section-title">🧪 Твои зелья</div>
+    <div class="inv-boxes" id="invPotions"></div>
+    <div class="pets-section-title">🎒 Предметы</div>
+    <div id="invWater" style="margin-bottom:8px"></div>
+    <div class="inv-items-grid" id="invItems"></div>
+    <div class="pets-section-title" style="margin-top:16px">🐾 Питомцы</div>
+    <div class="pets-grid" id="petsGrid"></div>
+  </div>
+
+  <!-- CUP PASS -->
+  <div class="page" id="page-pass">
+    <div class="pass-summary">
+      <div class="pass-summary-top">
+        <div class="gold-pass-icon">🌸</div>
+        <div>
+          <div class="pass-summary-title">Cup-Pass</div>
+          <div style="font-size:11px;color:#ffb7c5;font-weight:800;margin-top:1px">Сезон 1 — Сакура</div>
+          <div class="pass-summary-sub" id="passSummarySub">Получай XP за клики по питомцам</div>
+        </div>
+      </div>
+      <div class="pass-progress"><div class="pass-progress-fill" id="passProgressFill" style="width:0%"></div></div>
+      <div class="pass-level-line" id="passLevelLine"></div>
+      <button class="use-btn" id="passClaimsBtn" style="width:100%;margin-top:10px">Полученные награды</button>
+    </div>
+    <div class="pass-rewards-list" id="passRewardsList"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="section-title">⚙️ Настройки</div>
+
+    <!-- Аккаунт -->
+    <div class="setting-item" id="settingsUserItem" style="display:none">
+      <span class="icon">👤</span>
+      <div style="flex:1">
+        <div class="label" id="settingsUserName">Игрок</div>
+        <div style="font-size:11px;color:var(--text2)" id="settingsUserEmail"></div>
+      </div>
+    </div>
+    <div class="setting-item" style="cursor:pointer;display:none" id="settingsSignOut">
+      <span class="icon">🚪</span>
+      <span class="label">Выйти из аккаунта</span>
+      <span class="setting-val" style="color:var(--red)">Выйти</span>
+    </div>
+
+    <div class="setting-item">
+      <span class="icon">💵</span>
+      <span class="label">Долларов</span>
+      <span class="setting-val" id="setDollars">0</span>
+    </div>
+    <div class="setting-item">
+      <span class="icon">💎</span>
+      <span class="label">Алмазов</span>
+      <span class="setting-val" id="setDiamonds">5</span>
+    </div>
+    <div class="setting-item">
+      <span class="icon">🏆</span>
+      <span class="label">Лучшая серия</span>
+      <span class="setting-val" id="setBestStreak">0</span>
+    </div>
+    <div class="setting-item" id="goldTitleSetting" style="display:none">
+      <span class="icon">✨</span>
+      <span class="label">Золотое название сайта</span>
+      <select id="goldTitleSelect">
+        <option value="on">Вкл</option>
+        <option value="off">Выкл</option>
+      </select>
+    </div>
+    <div class="setting-item" style="cursor:pointer" id="resetBtn">
+      <span class="icon">🔄</span>
+      <span class="label">Сбросить прогресс</span>
+      <span class="setting-val" style="color:var(--red)">Сброс</span>
+    </div>
+    <div class="setting-item" style="cursor:pointer" onclick="window.open('https://t.me/+9dpgXTrhvExlMTU8','_blank')">
+      <span class="icon">✈️</span>
+      <span class="label">Telegram канал</span>
+      <span class="setting-val" style="color:var(--diamond)">Открыть</span>
+    </div>
+    <div class="setting-item">
+      <span class="icon">📋</span>
+      <span class="label" style="font-size:12px">Политика конфиденциальности и условия услуг доступны в нашем Telegram канале</span>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-btn active" data-page="home"><span class="nav-icon">🏠</span>Главная</div>
+  <div class="nav-btn" data-page="shop"><span class="nav-icon">🛒</span>Магазин</div>
+  <div class="nav-btn" data-page="inv"><span class="nav-icon">🎒</span>Инвентарь</div>
+  <div class="nav-btn" data-page="pass"><span class="nav-icon">🎫</span>Cup-Pass</div>
+  <div class="nav-btn" data-page="settings"><span class="nav-icon">⚙️</span>Настройки</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent">
+    <div class="modal-handle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
