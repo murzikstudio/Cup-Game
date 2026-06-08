@@ -25,12 +25,12 @@
 
 <!-- HEADER -->
 <div class="header" id="header">
-  <div class="logo">杯子</div>
+  <div class="logo" id="logoBtn" style="cursor:pointer" onclick="goPage('home')">杯子</div>
   <div class="currencies">
     <div class="currency">💵 <span id="dollarCount">0</span></div>
     <div class="currency">💎 <span id="diamondCount">5</span></div>
   </div>
-  <div class="auth-user-chip" id="authChip" style="display:none;margin-left:8px"></div>
+  <div class="auth-user-chip" id="authChip" style="display:none;margin-left:8px;cursor:pointer" onclick="openProfilePage()"></div>
 </div>
 
 <!-- PAGES -->
@@ -238,6 +238,89 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- PROFILE OVERLAY -->
+<div class="profile-overlay" id="profileOverlay" style="display:none">
+  <div class="profile-panel">
+    <div class="profile-header">
+      <button class="profile-back-btn" onclick="closeProfilePage()">← Назад</button>
+      <span class="profile-title">Профиль</span>
+    </div>
+    <!-- PROFILE TABS -->
+    <div class="profile-tabs">
+      <button class="profile-tab active" data-tab="myprofile" onclick="switchProfileTab('myprofile')">Мой профиль</button>
+      <button class="profile-tab" data-tab="leaderboard" onclick="switchProfileTab('leaderboard')">🏆 Лидеры</button>
+    </div>
+
+    <!-- MY PROFILE TAB -->
+    <div class="profile-tab-content active" id="ptab-myprofile">
+      <div class="profile-avatar-section">
+        <div class="profile-avatar-wrap">
+          <img id="profileAvatarPreview" src="" alt="" style="display:none">
+          <span id="profileAvatarEmoji" style="font-size:48px">👤</span>
+        </div>
+        <button class="profile-edit-btn" onclick="triggerAvatarUpload()">Изменить фото</button>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+      </div>
+
+      <div class="profile-field">
+        <label>Имя в игре</label>
+        <div class="profile-field-row">
+          <input type="text" id="profileNameInput" maxlength="20" placeholder="Введи имя...">
+          <span id="profileDisplayName" class="profile-name-display"></span>
+        </div>
+      </div>
+
+      <div class="profile-field">
+        <label>О себе</label>
+        <textarea id="profileBioInput" maxlength="100" placeholder="Расскажи о себе..."></textarea>
+      </div>
+
+      <div class="profile-field">
+        <label>Любимый питомец</label>
+        <select id="profileFavPetSelect">
+          <option value="">— Не выбран —</option>
+        </select>
+      </div>
+
+      <div class="profile-field profile-gold-name-row" id="goldNameRow" style="display:none">
+        <label>✨ Золотое имя (Голд-пасс)</label>
+        <select id="goldNameSelect">
+          <option value="on">Вкл</option>
+          <option value="off">Выкл</option>
+        </select>
+      </div>
+
+      <div class="profile-field">
+        <label>🔒 Приватный профиль</label>
+        <select id="profilePrivateSelect">
+          <option value="off">Нет — виден всем</option>
+          <option value="on">Да — скрыть всё кроме имени</option>
+        </select>
+      </div>
+
+      <button class="profile-save-btn" onclick="saveProfileData()">Сохранить</button>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div class="profile-tab-content" id="ptab-leaderboard">
+      <div id="leaderboardList" class="leaderboard-list">
+        <div class="leaderboard-loading">Загрузка...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW OTHER PROFILE OVERLAY -->
+<div class="profile-overlay" id="viewProfileOverlay" style="display:none">
+  <div class="profile-panel">
+    <div class="profile-header">
+      <button class="profile-back-btn" onclick="closeViewProfile()">← Назад</button>
+      <span class="profile-title">Профиль игрока</span>
+    </div>
+    <div id="viewProfileContent" class="view-profile-content"></div>
+  </div>
+</div>
 
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

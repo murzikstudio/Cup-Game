@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────
 // SUPABASE CONFIG — замени на свои данные!
 // ─────────────────────────────────────────
-const SUPABASE_URL      = 'https://btocrtujvjpobmwvsuys.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0b2NydHVqdmpwb2Jtd3ZzdXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4Mjg4ODgsImV4cCI6MjA5NjQwNDg4OH0.V-nd7qke4e83pjqVWRJy10goZ-WRoYw88Jrr8DwShLA';
+const SUPABASE_URL      = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
 
 // Если оба поля не заполнены — игра работает в офлайн-режиме (localStorage)
 const SUPABASE_READY = !SUPABASE_URL.includes('YOUR_PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_ANON');
@@ -68,12 +68,18 @@ function hideAuthOverlay() {
 function updateUserChip(user) {
   const chip = document.getElementById('authChip');
   if (!chip || !user) return;
-  const img = user.user_metadata?.avatar_url
-    ? `<img class="auth-avatar" src="${user.user_metadata.avatar_url}" alt="">`
-    : '👤';
-  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Игрок';
-  chip.innerHTML = `${img}<span>${name}</span>`;
+  const st = window.S || {};
+  const profileAvatar = st.profileAvatar;
+  const profileName = st.profileName;
+  const googleAvatar = user.user_metadata?.avatar_url;
+  const googleName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Игрок';
+  const avatarSrc = profileAvatar || googleAvatar;
+  const displayName = profileName || googleName;
+  const img = avatarSrc ? `<img class="auth-avatar" src="${avatarSrc}" alt="">` : '👤';
+  chip.innerHTML = `${img}<span>${displayName}</span>`;
   chip.style.display = 'flex';
+  const hasGold = (st.starterPackPurchased || st.goldPassOwned) && st.goldNameEnabled !== false;
+  chip.classList.toggle('gold-name', hasGold);
   // Settings page user info
   const nameEl = document.getElementById('settingsUserName');
   const emailEl = document.getElementById('settingsUserEmail');
@@ -158,9 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
     else { window.supabaseUser = null; showAuthOverlay(); }
   });
 
-  // Чип с именем в хедере — показать настройки
+  // Чип с именем в хедере — открыть профиль
   document.getElementById('authChip')?.addEventListener('click', () => {
-    if (typeof goPage === 'function') goPage('settings');
+    if (typeof openProfilePage === 'function') openProfilePage();
   });
 
   initAuth();

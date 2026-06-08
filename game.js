@@ -12,7 +12,9 @@ const DEFAULT_STATE = {
   goldTitleEnabled: true, shopOffers: [], shopOffersInitialized: false,
   shopOffersDate: '', cupCooldownEnd: 0, policyAccepted: false,
   siteStartAt: 0, starterPackPurchased: false, starterPackExpired: false,
-  premiumPackPurchased: false, chinaBoxPurchased: false, items: {}, water: 0
+  premiumPackPurchased: false, chinaBoxPurchased: false, items: {}, water: 0,
+  profileName: '', profileBio: '', profileAvatar: '', profileFavPet: '', profilePrivate: false,
+  goldNameEnabled: true,
 };
 window.DEFAULT_STATE = DEFAULT_STATE;
 
@@ -46,10 +48,10 @@ const PETS = [
   { id: 'pepe',       emoji: '🐸', name: 'Пепе',       rarity: 'uncommon', passClicks: 2, diamondChance: 0.015, tiredChance: 0.03 },
   { id: 'kakaracha',  emoji: '🪳', name: 'Какарача',   rarity: 'uncommon', passClicks: 2, diamondChance: 0.015, tiredChance: 0.03 },
   { id: 'garry',      emoji: '🐌', name: 'Гэрри',      rarity: 'uncommon', passClicks: 2, diamondChance: 0.015, tiredChance: 0.03 },
-  { id: 'hamster',    emoji: '🐹', name: 'Хамстер',    rarity: 'rare',     passClicks: 2, diamondChance: 0.02,  tiredChance: 0.03 },
-  { id: 'papagay',    emoji: '🦜', name: 'Папагай',    rarity: 'rare',     passClicks: 2, diamondChance: 0.02,  tiredChance: 0.03 },
-  { id: 'croco',      emoji: '🐊', name: 'Крокозябра', rarity: 'epic',     passClicks: 3, diamondChance: 0.03,  tiredChance: 0.03 },
-  { id: 'shibaki',    emoji: '🐕', name: 'Шибаки',     rarity: 'epic',     passClicks: 3, diamondChance: 0.03,  tiredChance: 0.03 },
+  { id: 'hamster',    emoji: '🐹', name: 'Хамстер',    rarity: 'rare',     passClicks: 3, diamondChance: 0.02,  tiredChance: 0.03 },
+  { id: 'papagay',    emoji: '🦜', name: 'Папагай',    rarity: 'rare',     passClicks: 3, diamondChance: 0.02,  tiredChance: 0.03 },
+  { id: 'croco',      emoji: '🐊', name: 'Крокозябра', rarity: 'epic',     passClicks: 4, diamondChance: 0.03,  tiredChance: 0.03 },
+  { id: 'shibaki',    emoji: '🐕', name: 'Шибаки',     rarity: 'epic',     passClicks: 4, diamondChance: 0.03,  tiredChance: 0.03 },
   { id: 'turtle',     emoji: '🐢', name: 'Черепашка',  rarity: 'legendary',passClicks: 5, diamondChance: 0.04,  tiredChance: 0.025 },
   { id: 'hantavirus', emoji: '🐀', name: 'Хантавирус', rarity: 'legendary',passClicks: 5, diamondChance: 0.04,  tiredChance: 0.025 },
   { id: 'murzik',     emoji: '🐈‍⬛', name: 'Мурзик',    rarity: 'mythic',   passClicks: 8, diamondChance: 0.05,  tiredChance: 0.02 },
@@ -323,6 +325,13 @@ function applyGoldTitle() {
   const goldOn = !!(S.goldPassOwned && S.goldTitleEnabled);
   if (logo) logo.classList.toggle('gold-title', goldOn);
   document.title = goldOn ? '黄金通行证' : '杯子';
+  // Gold name in profile
+  const hasGoldPass = S.starterPackPurchased || S.goldPassOwned || (typeof getStarterPackState === 'function' && getStarterPackState());
+  const goldNameOn = !!(hasGoldPass && S.goldNameEnabled !== false);
+  const chip = document.getElementById('authChip');
+  if (chip) chip.classList.toggle('gold-name', goldNameOn);
+  const profileNameEl = document.getElementById('profileDisplayName');
+  if (profileNameEl) profileNameEl.classList.toggle('gold-name', goldNameOn);
 }
 
 function updateHeader() {
@@ -396,6 +405,13 @@ function applyGoldTitle() {
   const goldOn = !!(S.goldPassOwned && S.goldTitleEnabled);
   if (logo) logo.classList.toggle('gold-title', goldOn);
   document.title = goldOn ? '黄金通行证' : '杯子';
+  // Gold name in profile
+  const hasGoldPass = S.starterPackPurchased || S.goldPassOwned || (typeof getStarterPackState === 'function' && getStarterPackState());
+  const goldNameOn = !!(hasGoldPass && S.goldNameEnabled !== false);
+  const chip = document.getElementById('authChip');
+  if (chip) chip.classList.toggle('gold-name', goldNameOn);
+  const profileNameEl = document.getElementById('profileDisplayName');
+  if (profileNameEl) profileNameEl.classList.toggle('gold-name', goldNameOn);
 }
 
 function updateHeader() {
@@ -472,13 +488,10 @@ let cupCooldown = false;
 let cupCooldownInterval = null;
 
 function getLuckChance() { return Math.min(0.6 + S.luckChanceLvl * 0.005, 0.95); }
-// Lucky reward: each level adds the next increment (+1, +2, +3...)
-// Total = 1 + (1+2) + (1+2+3) ... = sum of triangular numbers
-// Base 1, after lvl 1 -> 1+1=2, after lvl 2 -> 2+2=4, after lvl 3 -> 4+3=7 etc.
+// Lucky reward: flat +1 per level. Base 1, each level adds 1.
 function getLuckyReward() {
   const lvl = S.luckyRewardLvl || 0;
-  // sum of 1..lvl = lvl*(lvl+1)/2, plus 1 base
-  return 1 + (lvl * (lvl + 1)) / 2;
+  return 1 + lvl;
 }
 function getStreakBonus() { return S.streakBonusLvl || 0; }
 
@@ -1103,7 +1116,10 @@ function getPassThreshold(nextLevel) {
 }
 
 function addPassPoints(points) {
-  const goldMult = S.goldPassOwned ? 1.5 : 1;
+  // ✅ ОПЫТ ДАЮТ ВСЕ
+  // Gold Pass = 1.5x множитель к опыту
+  const hasGoldPass = S.starterPackPurchased || S.goldPassOwned || getStarterPackState();
+  const goldMult = hasGoldPass ? 1.5 : 1.0;
   const bubbleMult = getBubbleXPMult();
   const gained = Math.max(1, Math.round(points * goldMult * bubbleMult));
   S.passXp = (S.passXp || 0) + gained;
@@ -2007,35 +2023,43 @@ function renderGoldPassOffer() {
 function givePassReward(level) {
   const reward = PASS_REWARDS[level];
   if (!reward) return null;
+  
+  // ✅ Проверка: есть ли Gold Pass для эксклюзивных наград?
+  const hasGoldPass = S.starterPackPurchased || S.goldPassOwned || getStarterPackState();
+  if (reward.goldOnly && !hasGoldPass) {
+    showToast('🌟 Эта награда только для владельцев Gold Pass! Купи Gold Pass, чтобы получить её.', 'var(--purple)');
+    return '🔒 Заблокировано (только Gold Pass)';
+  }
+  
   switch (reward.type) {
     case 'diamonds':
       addDiamonds(reward.amount);
-      return `${reward.amount} алмазов`;
+      return `${reward.amount} алмазов${reward.goldOnly ? ' ⭐' : ''}`;
     case 'gold':
       addDiamonds(reward.amount);
-      return `${reward.amount} алмазов`;
+      return `${reward.amount} алмазов${reward.goldOnly ? ' ⭐' : ''}`;
     case 'box':
       S.boxes[reward.box] = (S.boxes[reward.box] || 0) + (reward.amount || 1);
       save();
-      return `${reward.amount || 1} ${BOXES.find(b => b.id === reward.box)?.name || 'ящик'}`;
+      return `${reward.amount || 1} ${BOXES.find(b => b.id === reward.box)?.name || 'ящик'}${reward.goldOnly ? ' ⭐' : ''}`;
     case 'potion':
       S.potions[reward.potion] = (S.potions[reward.potion] || 0) + (reward.amount || 1);
       save();
-      return `${reward.amount || 1} ${POTION_RECIPES.find(p => p.id === reward.potion)?.name || 'зелье'}`;
+      return `${reward.amount || 1} ${POTION_RECIPES.find(p => p.id === reward.potion)?.name || 'зелье'}${reward.goldOnly ? ' ⭐' : ''}`;
     case 'fragment':
       addPetFrag(reward.pet, reward.amount || 1);
-      return `${reward.amount || 1} фрагмент(а)`;
+      return `${reward.amount || 1} фрагмент(а)${reward.goldOnly ? ' ⭐' : ''}`;
     case 'random_fragments': {
       const pool = PETS.filter(p => p.rarity !== 'mythic');
       for (let i = 0; i < reward.amount; i++) {
         const pet = pool[Math.floor(Math.random() * pool.length)];
         addPetFrag(pet.id, 1);
       }
-      return `${reward.amount} случайных фрагментов`;
+      return `${reward.amount} случайных фрагментов${reward.goldOnly ? ' ⭐' : ''}`;
     }
     case 'pet_unlock':
       addPetFrag(reward.pet, 5);
-      return `${PETS.find(p=>p.id===reward.pet)?.name || reward.pet} разблокирован!`;
+      return `${PETS.find(p=>p.id===reward.pet)?.name || reward.pet} разблокирован!${reward.goldOnly ? ' ⭐' : ''}`;
     case 'choice':
       return 'Выбор награды';
   }
@@ -2279,3 +2303,336 @@ window.initGameState = function (cloudState) {
   renderPass();
   renderInv();
 };
+
+// ─────────────────────────────────────────
+// PROFILE PAGE
+// ─────────────────────────────────────────
+
+function openProfilePage() {
+  const overlay = document.getElementById('profileOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'block';
+  loadProfileForm();
+  switchProfileTab('myprofile');
+}
+
+function closeProfilePage() {
+  const overlay = document.getElementById('profileOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function switchProfileTab(tab) {
+  document.querySelectorAll('.profile-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.profile-tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'ptab-' + tab);
+  });
+  if (tab === 'leaderboard') renderLeaderboard();
+}
+
+function loadProfileForm() {
+  // Name
+  const nameInput = document.getElementById('profileNameInput');
+  if (nameInput) nameInput.value = S.profileName || '';
+
+  // Display name preview
+  const displayName = document.getElementById('profileDisplayName');
+  if (displayName) {
+    const hasGold = S.starterPackPurchased || S.goldPassOwned;
+    const goldOn = hasGold && S.goldNameEnabled !== false;
+    displayName.textContent = S.profileName || 'Игрок';
+    displayName.classList.toggle('gold-name', goldOn);
+  }
+
+  // Bio
+  const bioInput = document.getElementById('profileBioInput');
+  if (bioInput) bioInput.value = S.profileBio || '';
+
+  // Avatar
+  const avatarPreview = document.getElementById('profileAvatarPreview');
+  const avatarEmoji = document.getElementById('profileAvatarEmoji');
+  if (S.profileAvatar && avatarPreview) {
+    avatarPreview.src = S.profileAvatar;
+    avatarPreview.style.display = 'block';
+    if (avatarEmoji) avatarEmoji.style.display = 'none';
+  } else {
+    if (avatarPreview) avatarPreview.style.display = 'none';
+    if (avatarEmoji) avatarEmoji.style.display = '';
+  }
+
+  // Fav pet select
+  const favPetSelect = document.getElementById('profileFavPetSelect');
+  if (favPetSelect) {
+    favPetSelect.innerHTML = '<option value="">— Не выбран —</option>';
+    PETS.forEach(pet => {
+      const owned = (S.pets[pet.id] || 0) >= 5;
+      if (!owned) return;
+      const opt = document.createElement('option');
+      opt.value = pet.id;
+      opt.textContent = pet.emoji + ' ' + pet.name;
+      if (S.profileFavPet === pet.id) opt.selected = true;
+      favPetSelect.appendChild(opt);
+    });
+  }
+
+  // Gold name toggle
+  const hasGold = S.starterPackPurchased || S.goldPassOwned;
+  const goldNameRow = document.getElementById('goldNameRow');
+  if (goldNameRow) goldNameRow.style.display = hasGold ? '' : 'none';
+  const goldNameSelect = document.getElementById('goldNameSelect');
+  if (goldNameSelect) goldNameSelect.value = S.goldNameEnabled !== false ? 'on' : 'off';
+
+  // Private
+  const privSelect = document.getElementById('profilePrivateSelect');
+  if (privSelect) privSelect.value = S.profilePrivate ? 'on' : 'off';
+
+  // Live name preview
+  if (nameInput) {
+    nameInput.oninput = () => {
+      if (displayName) displayName.textContent = nameInput.value || 'Игрок';
+    };
+  }
+}
+
+function triggerAvatarUpload() {
+  document.getElementById('avatarFileInput')?.click();
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Файл слишком большой (макс. 2MB)', 'var(--red)');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    // Resize to 128x128
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      const size = Math.min(img.width, img.height);
+      const ox = (img.width - size) / 2;
+      const oy = (img.height - size) / 2;
+      ctx.drawImage(img, ox, oy, size, size, 0, 0, 128, 128);
+      const resized = canvas.toDataURL('image/jpeg', 0.75);
+      S.profileAvatar = resized;
+      save();
+      // Update preview
+      const avatarPreview = document.getElementById('profileAvatarPreview');
+      const avatarEmoji = document.getElementById('profileAvatarEmoji');
+      if (avatarPreview) { avatarPreview.src = resized; avatarPreview.style.display = 'block'; }
+      if (avatarEmoji) avatarEmoji.style.display = 'none';
+      // Update header chip
+      updateUserChipAvatar(resized);
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateUserChipAvatar(src) {
+  const chip = document.getElementById('authChip');
+  if (!chip) return;
+  const imgEl = chip.querySelector('.auth-avatar');
+  if (imgEl) { imgEl.src = src; return; }
+  // If no img, rebuild chip keeping name
+  const nameEl = chip.querySelector('span');
+  const name = nameEl ? nameEl.textContent : (S.profileName || 'Игрок');
+  chip.innerHTML = `<img class="auth-avatar" src="${src}" alt=""><span>${name}</span>`;
+}
+
+function saveProfileData() {
+  const nameInput = document.getElementById('profileNameInput');
+  const bioInput = document.getElementById('profileBioInput');
+  const favPetSelect = document.getElementById('profileFavPetSelect');
+  const privSelect = document.getElementById('profilePrivateSelect');
+  const goldNameSelect = document.getElementById('goldNameSelect');
+
+  if (nameInput) S.profileName = nameInput.value.trim().slice(0, 20);
+  if (bioInput) S.profileBio = bioInput.value.trim().slice(0, 100);
+  if (favPetSelect) S.profileFavPet = favPetSelect.value;
+  if (privSelect) S.profilePrivate = privSelect.value === 'on';
+  if (goldNameSelect) S.goldNameEnabled = goldNameSelect.value === 'on';
+
+  save();
+  applyGoldTitle();
+
+  // Update chip name
+  const chip = document.getElementById('authChip');
+  if (chip) {
+    const nameEl = chip.querySelector('span');
+    if (nameEl) nameEl.textContent = S.profileName || 'Игрок';
+    chip.classList.toggle('gold-name', !!(  (S.starterPackPurchased || S.goldPassOwned) && S.goldNameEnabled !== false));
+  }
+
+  showToast('Профиль сохранён ✅', 'var(--green)');
+  loadProfileForm();
+}
+
+// ─────────────────────────────────────────
+// LEADERBOARD
+// ─────────────────────────────────────────
+async function renderLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  if (!list) return;
+  list.innerHTML = '<div class="leaderboard-loading">Загрузка...</div>';
+
+  // Build local entry
+  const localEntry = {
+    id: 'local',
+    name: S.profileName || 'Ты',
+    avatar: S.profileAvatar || '',
+    bio: S.profileBio || '',
+    favPet: S.profileFavPet || '',
+    dollars: S.dollars || 0,
+    bestStreak: S.bestStreak || 0,
+    passRank: S.passRank || 0,
+    isPrivate: S.profilePrivate || false,
+    hasGoldName: !!(S.starterPackPurchased || S.goldPassOwned) && S.goldNameEnabled !== false,
+    isMe: true,
+  };
+
+  let entries = [];
+
+  // Try to load from Supabase
+  if (window._sb) {
+    try {
+      const { data } = await window._sb
+        .from('user_progress')
+        .select('user_id, state, updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(50);
+      if (data && data.length) {
+        entries = data.map(row => {
+          const st = row.state || {};
+          const hasGold = st.starterPackPurchased || st.goldPassOwned;
+          return {
+            id: row.user_id,
+            name: st.profileName || 'Игрок',
+            avatar: st.profileAvatar || '',
+            bio: st.profileBio || '',
+            favPet: st.profileFavPet || '',
+            dollars: st.dollars || 0,
+            bestStreak: st.bestStreak || 0,
+            passRank: st.passRank || 0,
+            isPrivate: st.profilePrivate || false,
+            hasGoldName: !!(hasGold) && st.goldNameEnabled !== false,
+            isMe: row.user_id === (window.supabaseUser?.id),
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('Leaderboard load error:', e);
+    }
+  }
+
+  // Fallback: just show local player
+  if (!entries.length) {
+    entries = [localEntry];
+  }
+
+  // Sort by dollars desc
+  entries.sort((a, b) => b.dollars - a.dollars);
+
+  list.innerHTML = '';
+  entries.forEach((entry, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+
+    const favPetData = entry.favPet ? PETS.find(p => p.id === entry.favPet) : null;
+    const petEmoji = favPetData ? favPetData.emoji : '';
+
+    const avatarHtml = entry.avatar
+      ? `<div class="lb-avatar"><img src="${entry.avatar}" alt=""></div>`
+      : `<div class="lb-avatar">👤</div>`;
+
+    const nameClass = entry.hasGoldName ? 'lb-name gold-name' : 'lb-name';
+    const youBadge = entry.isMe ? ' <span style="font-size:10px;background:rgba(46,204,113,.2);color:var(--green);padding:2px 6px;border-radius:8px;font-weight:700">Ты</span>' : '';
+
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    row.innerHTML = `
+      <span class="lb-rank ${rankClass}">${rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank}</span>
+      ${avatarHtml}
+      <div class="lb-info">
+        <div class="${nameClass}">${escapeHtml(entry.name)}${youBadge}${petEmoji ? ' ' + petEmoji : ''}</div>
+        <div class="lb-sub">Ранг ${entry.passRank} · Серия ${entry.bestStreak}</div>
+      </div>
+      <span class="lb-score">💵 ${entry.dollars.toLocaleString()}</span>
+    `;
+    row.onclick = () => openViewProfile(entry);
+    list.appendChild(row);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openViewProfile(entry) {
+  const overlay = document.getElementById('viewProfileOverlay');
+  const content = document.getElementById('viewProfileContent');
+  if (!overlay || !content) return;
+
+  const nameClass = entry.hasGoldName ? 'vp-name gold-name' : 'vp-name';
+  const favPetData = entry.favPet ? PETS.find(p => p.id === entry.favPet) : null;
+  const RARITY_COLORS = { common:'#888', uncommon:'#2ecc71', rare:'#3498db', epic:'#9b59b6', legendary:'#f39c12', mythic:'#e74c3c', unreal:'#00d4ff' };
+
+  if (entry.isPrivate && !entry.isMe) {
+    content.innerHTML = `
+      <div class="vp-avatar">👤</div>
+      <div class="vp-name">${escapeHtml(entry.name)}</div>
+      <div class="vp-private">🔒 Этот профиль скрыт</div>
+    `;
+  } else {
+    const avatarHtml = entry.avatar
+      ? `<div class="vp-avatar"><img src="${entry.avatar}" alt=""></div>`
+      : `<div class="vp-avatar" style="font-size:40px">👤</div>`;
+    const petHtml = favPetData
+      ? `<div class="vp-stat"><span>Любимый питомец</span><span>${favPetData.emoji} ${favPetData.name} <span style="font-size:11px;color:${RARITY_COLORS[favPetData.rarity]||'#888'}">${RARITY_LABELS[favPetData.rarity]||''}</span></span></div>`
+      : '';
+    content.innerHTML = `
+      ${avatarHtml}
+      <div class="${nameClass}">${escapeHtml(entry.name)}</div>
+      <div class="vp-bio">${escapeHtml(entry.bio || 'Нет описания')}</div>
+      <div class="vp-stat"><span>💵 Долларов</span><span>${entry.dollars.toLocaleString()}</span></div>
+      <div class="vp-stat"><span>🏆 Лучшая серия</span><span>${entry.bestStreak}</span></div>
+      <div class="vp-stat"><span>🎫 Ранг пасса</span><span>${entry.passRank}</span></div>
+      ${petHtml}
+    `;
+  }
+
+  overlay.style.display = 'block';
+}
+
+function closeViewProfile() {
+  const overlay = document.getElementById('viewProfileOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+// Update authChip to use profile name if set (offline mode)
+(function patchChipForOffline() {
+  const origInit = window.initGameState;
+  window.initGameState = function(cloudState) {
+    origInit(cloudState);
+    // If offline, show chip with profile name
+    if (!window.supabaseUser) {
+      const chip = document.getElementById('authChip');
+      if (chip) {
+        const name = S.profileName || 'Игрок';
+        const avatar = S.profileAvatar;
+        const hasGold = (S.starterPackPurchased || S.goldPassOwned) && S.goldNameEnabled !== false;
+        chip.innerHTML = avatar
+          ? `<img class="auth-avatar" src="${avatar}" alt=""><span>${name}</span>`
+          : `<span>👤 ${name}</span>`;
+        chip.style.display = 'flex';
+        chip.classList.toggle('gold-name', hasGold);
+      }
+    }
+  };
+})();
