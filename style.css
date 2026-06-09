@@ -573,6 +573,7 @@ body {
   color: var(--red);
   flex-direction: column;
   gap: 2px;
+  pointer-events: none;
 }
 
 
