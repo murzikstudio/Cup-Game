@@ -98,12 +98,24 @@
       <div id="potionsShopContainer"></div>
     </div>
     <div class="shop-section">
-      <div class="section-title">🎒 Предметы</div>
-      <div id="itemsShopContainer"></div>
-    </div>
-    <div class="shop-section">
-      <div class="section-title">🔨 Крафт зелий</div>
-      <div id="craftShopContainer"></div>
+      <div class="shop-sub-btns">
+        <button class="shop-sub-btn" onclick="openCraftItemsPage()">
+          <span class="shop-sub-btn-icon">🧰</span>
+          <div>
+            <div class="shop-sub-btn-title">Крафт и предметы</div>
+            <div class="shop-sub-btn-desc">Крафт зелий, покупка предметов</div>
+          </div>
+          <span class="shop-sub-btn-arrow">›</span>
+        </button>
+        <button class="shop-sub-btn shop-sub-btn--theme" onclick="openThemeShop()">
+          <span class="shop-sub-btn-icon">🎨</span>
+          <div>
+            <div class="shop-sub-btn-title">Магазин тем</div>
+            <div class="shop-sub-btn-desc">Персонализируй свой профиль</div>
+          </div>
+          <span class="shop-sub-btn-arrow">›</span>
+        </button>
+      </div>
     </div>
     <div class="shop-section">
       <div class="section-title">🎁 Ежедневный подарок</div>
@@ -202,6 +214,17 @@
         <option value="off">Выкл</option>
       </select>
     </div>
+    <div class="setting-item" id="themeSetting">
+      <span class="icon">🎨</span>
+      <span class="label">Тема оформления</span>
+      <select id="themeSelect" onchange="applyTheme(this.value, true)">
+        <option value="dark-green">Темно-Зеленая</option>
+        <option value="light-green">Светло-Зеленая</option>
+        <option value="chinese">Китайская</option>
+        <option value="pizza">Пицца</option>
+        <option value="divine">Божественная</option>
+      </select>
+    </div>
     <div class="setting-item" style="cursor:pointer" id="resetBtn">
       <span class="icon">🔄</span>
       <span class="label">Сбросить прогресс</span>
@@ -263,6 +286,11 @@
         <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
       </div>
 
+      <div class="profile-field" style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">🏆 Лучшая серия</span>
+        <span id="profileBestStreakVal" style="font-size:18px;font-weight:900;color:var(--gold)">0</span>
+      </div>
+
       <div class="profile-field">
         <label>Имя в игре</label>
         <div class="profile-field-row">
@@ -319,6 +347,39 @@
       <span class="profile-title">Профиль игрока</span>
     </div>
     <div id="viewProfileContent" class="view-profile-content"></div>
+  </div>
+</div>
+
+<!-- CRAFT & ITEMS OVERLAY -->
+<div class="profile-overlay" id="craftItemsOverlay" style="display:none">
+  <div class="profile-panel">
+    <div class="profile-header">
+      <button class="profile-back-btn" onclick="closeCraftItemsPage()">← Назад</button>
+      <span class="profile-title">Крафт и предметы</span>
+    </div>
+    <div class="profile-tabs">
+      <button class="profile-tab active" data-tab="items" onclick="switchCraftTab('items')">🎒 Предметы</button>
+      <button class="profile-tab" data-tab="craft" onclick="switchCraftTab('craft')">🔨 Крафт зелий</button>
+    </div>
+    <div class="profile-tab-content active" id="ctab-items" style="padding:16px">
+      <div id="itemsShopContainer"></div>
+    </div>
+    <div class="profile-tab-content" id="ctab-craft" style="padding:16px">
+      <div id="craftShopContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- THEME SHOP OVERLAY -->
+<div class="profile-overlay" id="themeShopOverlay" style="display:none">
+  <div class="profile-panel">
+    <div class="profile-header">
+      <button class="profile-back-btn" onclick="closeThemeShop()">← Назад</button>
+      <span class="profile-title">🎨 Магазин тем</span>
+    </div>
+    <div style="padding:16px">
+      <div id="themeShopList"></div>
+    </div>
   </div>
 </div>
 

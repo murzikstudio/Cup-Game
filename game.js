@@ -15,6 +15,7 @@ const DEFAULT_STATE = {
   premiumPackPurchased: false, chinaBoxPurchased: false, items: {}, water: 0,
   profileName: '', profileBio: '', profileAvatar: '', profileFavPet: '', profilePrivate: false,
   goldNameEnabled: true,
+  selectedTheme: 'dark-green', ownedThemes: ['dark-green','light-green'],
 };
 window.DEFAULT_STATE = DEFAULT_STATE;
 
@@ -2383,6 +2384,10 @@ function loadProfileForm() {
   const goldNameSelect = document.getElementById('goldNameSelect');
   if (goldNameSelect) goldNameSelect.value = S.goldNameEnabled !== false ? 'on' : 'off';
 
+  // Best streak stat
+  const bsEl = document.getElementById('profileBestStreakVal');
+  if (bsEl) bsEl.textContent = S.bestStreak || 0;
+
   // Private
   const privSelect = document.getElementById('profilePrivateSelect');
   if (privSelect) privSelect.value = S.profilePrivate ? 'on' : 'off';
@@ -2453,6 +2458,10 @@ function saveProfileData() {
   const privSelect = document.getElementById('profilePrivateSelect');
   const goldNameSelect = document.getElementById('goldNameSelect');
 
+  // bestStreak stat display
+  const bsEl = document.getElementById('profileBestStreakVal');
+  if (bsEl) bsEl.textContent = S.bestStreak || 0;
+
   if (nameInput) S.profileName = nameInput.value.trim().slice(0, 20);
   if (bioInput) S.profileBio = bioInput.value.trim().slice(0, 100);
   if (favPetSelect) S.profileFavPet = favPetSelect.value;
@@ -2494,6 +2503,7 @@ async function renderLeaderboard() {
     passRank: S.passRank || 0,
     isPrivate: S.profilePrivate || false,
     hasGoldName: !!(S.starterPackPurchased || S.goldPassOwned) && S.goldNameEnabled !== false,
+    selectedTheme: S.selectedTheme || 'dark-green',
     isMe: true,
   };
 
@@ -2522,6 +2532,7 @@ async function renderLeaderboard() {
             passRank: st.passRank || 0,
             isPrivate: st.profilePrivate || false,
             hasGoldName: !!(hasGold) && st.goldNameEnabled !== false,
+            selectedTheme: st.selectedTheme || 'dark-green',
             isMe: row.user_id === (window.supabaseUser?.id),
           };
         });
@@ -2600,6 +2611,12 @@ function openViewProfile(entry) {
       ${avatarHtml}
       <div class="${nameClass}">${escapeHtml(entry.name)}</div>
       <div class="vp-bio">${escapeHtml(entry.bio || 'Нет описания')}</div>
+      ${entry.selectedTheme && entry.selectedTheme !== 'dark-green' ? (() => {
+        const th = (typeof THEMES !== 'undefined' ? THEMES : []).find(t => t.id === entry.selectedTheme);
+        if (!th) return '';
+        const hdr = th.vars['--header-grad'].match(/#[0-9a-fA-F]{6}/)?.[0] || '#27ae60';
+        return `<div class="vp-stat"><span>🎨 Тема</span><span>${th.emoji} ${th.name}</span></div>`;
+      })() : ''}
       <div class="vp-stat"><span>💵 Долларов</span><span>${entry.dollars.toLocaleString()}</span></div>
       <div class="vp-stat"><span>🏆 Лучшая серия</span><span>${entry.bestStreak}</span></div>
       <div class="vp-stat"><span>🎫 Ранг пасса</span><span>${entry.passRank}</span></div>
@@ -2635,4 +2652,252 @@ function closeViewProfile() {
       }
     }
   };
+})();
+
+// ─────────────────────────────────────────
+// THEME SYSTEM
+// ─────────────────────────────────────────
+
+const THEMES = [
+  {
+    id: 'dark-green',
+    name: 'Темно-Зеленая',
+    desc: 'Классическая тёмная тема',
+    price: 0,
+    emoji: '🌲',
+    vars: {
+      '--bg': '#1a1a1a',
+      '--bg2': '#222222',
+      '--bg3': '#2a2a2a',
+      '--text': '#e8e8e8',
+      '--text2': '#aaaaaa',
+      '--card': '#2d2d2d',
+      '--card2': '#333333',
+      '--border': '#3a3a3a',
+      '--header-grad': 'linear-gradient(135deg,#1e8449,#27ae60,#2ecc71)',
+    }
+  },
+  {
+    id: 'light-green',
+    name: 'Светло-Зеленая',
+    desc: 'Светлый фон, свежий зелёный верх',
+    price: 0,
+    emoji: '🌿',
+    vars: {
+      '--bg': '#f0f7f0',
+      '--bg2': '#e4f0e4',
+      '--bg3': '#d8ecd8',
+      '--text': '#1a2e1a',
+      '--text2': '#4a7050',
+      '--card': '#ffffff',
+      '--card2': '#f5faf5',
+      '--border': '#b8d8b8',
+      '--header-grad': 'linear-gradient(135deg,#52b788,#74c69d,#95d5b2)',
+    }
+  },
+  {
+    id: 'chinese',
+    name: 'Китайская',
+    desc: 'Красная шапка, белый фон',
+    price: 200,
+    emoji: '🀄',
+    vars: {
+      '--bg': '#fafafa',
+      '--bg2': '#f2f2f2',
+      '--bg3': '#e8e8e8',
+      '--text': '#1a0000',
+      '--text2': '#7a2020',
+      '--card': '#ffffff',
+      '--card2': '#fff5f5',
+      '--border': '#e8c0c0',
+      '--header-grad': 'linear-gradient(135deg,#b71c1c,#c62828,#e53935)',
+    }
+  },
+  {
+    id: 'pizza',
+    name: 'Пицца',
+    desc: 'Оранжевый фон, жёлтая шапка',
+    price: 300,
+    emoji: '🍕',
+    vars: {
+      '--bg': '#ff8c00',
+      '--bg2': '#e07800',
+      '--bg3': '#c86400',
+      '--text': '#fff8e8',
+      '--text2': '#ffe4a0',
+      '--card': '#ff9a1a',
+      '--card2': '#ffaa33',
+      '--border': '#ffcc55',
+      '--header-grad': 'linear-gradient(135deg,#f9a825,#fbc02d,#fdd835)',
+    }
+  },
+  {
+    id: 'divine',
+    name: 'Божественная',
+    desc: 'Золотистый свет, белая шапка',
+    price: 300,
+    emoji: '✨',
+    vars: {
+      '--bg': '#fffde7',
+      '--bg2': '#fff9c4',
+      '--bg3': '#fff59d',
+      '--text': '#3e2723',
+      '--text2': '#795548',
+      '--card': '#ffffff',
+      '--card2': '#fffde7',
+      '--border': '#ffe082',
+      '--header-grad': 'linear-gradient(135deg,#f5f5f5,#fafafa,#ffffff)',
+    }
+  },
+];
+
+function applyTheme(themeId, save_) {
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  const root = document.documentElement;
+  for (const [k, v] of Object.entries(theme.vars)) {
+    root.style.setProperty(k, v);
+  }
+  // Apply header gradient via a CSS class swap
+  const header = document.querySelector('.header');
+  if (header) header.style.background = theme.vars['--header-grad'];
+
+  // Sync settings select
+  const sel = document.getElementById('themeSelect');
+  if (sel) sel.value = themeId;
+
+  if (save_) {
+    S.selectedTheme = themeId;
+    if (typeof save === 'function') save();
+    renderThemeShop();
+  }
+}
+
+function initTheme() {
+  const themeId = S.selectedTheme || 'dark-green';
+  applyTheme(themeId, false);
+  const sel = document.getElementById('themeSelect');
+  if (sel) {
+    // Only show owned themes as available
+    Array.from(sel.options).forEach(opt => {
+      const owned = (S.ownedThemes || ['dark-green','light-green']).includes(opt.value);
+      opt.disabled = !owned;
+      if (!owned) opt.textContent = opt.textContent.replace(' 🔒','') + ' 🔒';
+    });
+    sel.value = themeId;
+  }
+}
+
+// ─────────────────────────────────────────
+// THEME SHOP
+// ─────────────────────────────────────────
+
+function openThemeShop() {
+  const overlay = document.getElementById('themeShopOverlay');
+  if (overlay) overlay.style.display = 'block';
+  renderThemeShop();
+}
+
+function closeThemeShop() {
+  const overlay = document.getElementById('themeShopOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function renderThemeShop() {
+  const list = document.getElementById('themeShopList');
+  if (!list) return;
+  const owned = S.ownedThemes || ['dark-green','light-green'];
+  const selected = S.selectedTheme || 'dark-green';
+
+  list.innerHTML = '';
+  THEMES.forEach(theme => {
+    const isOwned = owned.includes(theme.id);
+    const isSelected = selected === theme.id;
+    const isFree = theme.price === 0;
+
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (isSelected ? ' theme-card--active' : '');
+
+    // Preview swatch
+    const headerColor = theme.vars['--header-grad'].match(/#[0-9a-fA-F]{6}/)?.[0] || '#27ae60';
+    const bgColor = theme.vars['--bg'];
+    card.innerHTML = `
+      <div class="theme-preview">
+        <div class="theme-preview-header" style="background:${theme.vars['--header-grad']}"></div>
+        <div class="theme-preview-body" style="background:${bgColor}">
+          <div class="theme-preview-card" style="background:${theme.vars['--card']};border-color:${theme.vars['--border']}"></div>
+          <div class="theme-preview-card" style="background:${theme.vars['--card']};border-color:${theme.vars['--border']}"></div>
+        </div>
+      </div>
+      <div class="theme-info">
+        <div class="theme-name">${theme.emoji} ${theme.name}</div>
+        <div class="theme-desc">${theme.desc}</div>
+      </div>
+      <div class="theme-action">
+        ${isSelected
+          ? '<span class="theme-badge theme-badge--active">✓ Активна</span>'
+          : isOwned
+            ? `<button class="theme-apply-btn" onclick="applyTheme('${theme.id}', true)">Применить</button>`
+            : `<button class="theme-buy-btn" onclick="buyTheme('${theme.id}')">💎 ${theme.price}</button>`
+        }
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function buyTheme(themeId) {
+  const theme = THEMES.find(t => t.id === themeId);
+  if (!theme) return;
+  if ((S.diamonds || 0) < theme.price) {
+    showToast('Недостаточно алмазов 💎', 'var(--red)');
+    return;
+  }
+  S.diamonds -= theme.price;
+  if (!S.ownedThemes) S.ownedThemes = ['dark-green','light-green'];
+  if (!S.ownedThemes.includes(themeId)) S.ownedThemes.push(themeId);
+  save();
+  updateHeader();
+  applyTheme(themeId, true);
+  showToast('Тема разблокирована! 🎨', 'var(--green)');
+  initTheme();
+}
+
+// ─────────────────────────────────────────
+// CRAFT & ITEMS SUB-PAGE
+// ─────────────────────────────────────────
+
+function openCraftItemsPage() {
+  const overlay = document.getElementById('craftItemsOverlay');
+  if (overlay) overlay.style.display = 'block';
+  switchCraftTab('items');
+  // Re-render shop containers if needed
+  if (typeof renderItemsShop === 'function') renderItemsShop();
+  if (typeof renderCraftShop === 'function') renderCraftShop();
+}
+
+function closeCraftItemsPage() {
+  const overlay = document.getElementById('craftItemsOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function switchCraftTab(tab) {
+  document.querySelectorAll('#craftItemsOverlay .profile-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('#craftItemsOverlay .profile-tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'ctab-' + tab);
+  });
+}
+
+// Hook into game init to apply theme
+const _origInitGameState = window.initGameState;
+window.initGameState = function(cloudState) {
+  _origInitGameState(cloudState);
+  initTheme();
+};
+
+// Also apply theme on page load before auth
+(function() {
+  const ls = (() => { try { return JSON.parse(localStorage.getItem('cupGameState') || '{}'); } catch(e) { return {}; } })();
+  if (ls.selectedTheme) applyTheme(ls.selectedTheme, false);
 })();
