@@ -83,7 +83,7 @@ function updateUserChip(user) {
   // Settings page user info
   const nameEl = document.getElementById('settingsUserName');
   const emailEl = document.getElementById('settingsUserEmail');
-  if (nameEl) nameEl.textContent = name;
+  if (nameEl) nameEl.textContent = displayName;
   if (emailEl) emailEl.textContent = user.email || '';
   const userItem = document.getElementById('settingsUserItem');
   if (userItem) userItem.style.display = '';
@@ -102,6 +102,8 @@ async function onAuthSuccess(user) {
   if (typeof window.initGameState === 'function') {
     window.initGameState(cloudState);
   }
+  // Re-update chip with profile data now loaded from cloud
+  setTimeout(() => updateUserChip(user), 100);
 }
 
 // ─────────────────────────────────────────

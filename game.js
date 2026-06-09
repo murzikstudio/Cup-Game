@@ -14,7 +14,7 @@ const DEFAULT_STATE = {
   siteStartAt: 0, starterPackPurchased: false, starterPackExpired: false,
   premiumPackPurchased: false, chinaBoxPurchased: false, items: {}, water: 0,
   profileName: '', profileBio: '', profileAvatar: '', profileFavPet: '', profilePrivate: false,
-  goldNameEnabled: true,
+  goldNameEnabled: true, totalClicks: 0,
   selectedTheme: 'dark-green', ownedThemes: ['dark-green','light-green'],
 };
 window.DEFAULT_STATE = DEFAULT_STATE;
@@ -585,6 +585,7 @@ function showCupFallOverlay() {
 
 document.getElementById('cupContainer').addEventListener('click', () => {
   if (cupCooldown) return;
+  S.totalClicks = (S.totalClicks || 0) + 1;
   const cup = document.getElementById('cupContainer');
   const cupSvg = document.getElementById('cupSvg');
   const coinReveal = document.getElementById('coinReveal');
@@ -2486,6 +2487,9 @@ function saveProfileData() {
 // ─────────────────────────────────────────
 // LEADERBOARD
 // ─────────────────────────────────────────
+let _lbEntries = [];
+let _lbSort = 'dollars';
+
 async function renderLeaderboard() {
   const list = document.getElementById('leaderboardList');
   if (!list) return;
@@ -2501,6 +2505,7 @@ async function renderLeaderboard() {
     dollars: S.dollars || 0,
     bestStreak: S.bestStreak || 0,
     passRank: S.passRank || 0,
+    totalClicks: S.totalClicks || 0,
     isPrivate: S.profilePrivate || false,
     hasGoldName: !!(S.starterPackPurchased || S.goldPassOwned) && S.goldNameEnabled !== false,
     selectedTheme: S.selectedTheme || 'dark-green',
@@ -2516,7 +2521,7 @@ async function renderLeaderboard() {
         .from('user_progress')
         .select('user_id, state, updated_at')
         .order('updated_at', { ascending: false })
-        .limit(50);
+        .limit(100);
       if (data && data.length) {
         entries = data.map(row => {
           const st = row.state || {};
@@ -2530,6 +2535,7 @@ async function renderLeaderboard() {
             dollars: st.dollars || 0,
             bestStreak: st.bestStreak || 0,
             passRank: st.passRank || 0,
+            totalClicks: st.totalClicks || 0,
             isPrivate: st.profilePrivate || false,
             hasGoldName: !!(hasGold) && st.goldNameEnabled !== false,
             selectedTheme: st.selectedTheme || 'dark-green',
@@ -2545,13 +2551,40 @@ async function renderLeaderboard() {
   // Fallback: just show local player
   if (!entries.length) {
     entries = [localEntry];
+  } else {
+    // Make sure current player is marked isMe even if they have a supabase id
+    const myId = window.supabaseUser?.id;
+    if (myId && !entries.some(e => e.isMe)) {
+      entries.push(localEntry);
+    }
   }
 
-  // Sort by dollars desc
-  entries.sort((a, b) => b.dollars - a.dollars);
+  _lbEntries = entries;
+  renderLeaderboardRows();
+}
 
-  list.innerHTML = '';
-  entries.forEach((entry, i) => {
+function renderLeaderboardRows() {
+  const list = document.getElementById('leaderboardList');
+  if (!list) return;
+
+  const sortConfig = {
+    dollars: { label: '💵 Деньги', fn: (a, b) => b.dollars - a.dollars, fmt: e => '💵 ' + e.dollars.toLocaleString() },
+    streak: { label: '🔥 Серия', fn: (a, b) => b.bestStreak - a.bestStreak, fmt: e => '🔥 ' + e.bestStreak },
+    rank: { label: '⭐ Ранг', fn: (a, b) => b.passRank - a.passRank, fmt: e => '⭐ ' + e.passRank },
+    clicks: { label: '👆 Клики', fn: (a, b) => b.totalClicks - a.totalClicks, fmt: e => '👆 ' + (e.totalClicks || 0).toLocaleString() },
+  };
+
+  const sorted = [..._lbEntries].sort(sortConfig[_lbSort].fn);
+
+  list.innerHTML = `
+    <div class="lb-sort-tabs">
+      ${Object.entries(sortConfig).map(([key, cfg]) =>
+        `<button class="lb-sort-btn${_lbSort === key ? ' active' : ''}" onclick="setLbSort('${key}')">${cfg.label}</button>`
+      ).join('')}
+    </div>
+  `;
+
+  sorted.forEach((entry, i) => {
     const rank = i + 1;
     const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
 
@@ -2565,6 +2598,8 @@ async function renderLeaderboard() {
     const nameClass = entry.hasGoldName ? 'lb-name gold-name' : 'lb-name';
     const youBadge = entry.isMe ? ' <span style="font-size:10px;background:rgba(46,204,113,.2);color:var(--green);padding:2px 6px;border-radius:8px;font-weight:700">Ты</span>' : '';
 
+    const scoreHtml = sortConfig[_lbSort].fmt(entry);
+
     const row = document.createElement('div');
     row.className = 'lb-row';
     row.innerHTML = `
@@ -2572,13 +2607,18 @@ async function renderLeaderboard() {
       ${avatarHtml}
       <div class="lb-info">
         <div class="${nameClass}">${escapeHtml(entry.name)}${youBadge}${petEmoji ? ' ' + petEmoji : ''}</div>
-        <div class="lb-sub">Ранг ${entry.passRank} · Серия ${entry.bestStreak}</div>
+        <div class="lb-sub">💵 ${entry.dollars.toLocaleString()} · 🔥 ${entry.bestStreak} · ⭐ ${entry.passRank}</div>
       </div>
-      <span class="lb-score">💵 ${entry.dollars.toLocaleString()}</span>
+      <span class="lb-score">${scoreHtml}</span>
     `;
     row.onclick = () => openViewProfile(entry);
     list.appendChild(row);
   });
+}
+
+function setLbSort(key) {
+  _lbSort = key;
+  renderLeaderboardRows();
 }
 
 function escapeHtml(str) {
